@@ -251,7 +251,7 @@ const galleryHeight = Math.max(22000, frameCount * 460);
 
   @media (max-width: 767px) {
     .gallery-shell {
-      min-height: calc(var(--gallery-height) * 0.78 + 100vh);
+      min-height: calc(var(--gallery-height) + 100vh);
     }
 
     .gallery-frame {
@@ -353,12 +353,12 @@ const galleryHeight = Math.max(22000, frameCount * 460);
 
     const setSectionHeight = () => {
       const isMobile = window.matchMedia('(max-width: 767px)').matches;
-      const base = frames.length * (isMobile ? 360 : 460);
-      section.style.setProperty('--gallery-height', `${Math.max(isMobile ? 17000 : 22000, base)}px`);
+      const base = frames.length * (isMobile ? 640 : 460);
+      section.style.setProperty('--gallery-height', `${Math.max(isMobile ? 30000 : 22000, base)}px`);
     };
 
     const updateFrames = () => {
-      const speed = window.innerWidth < 768 ? 2.9 : 2.6;
+      const speed = window.innerWidth < 768 ? 2.05 : 2.6;
 
       frames.forEach((frame, index) => {
         zVals[index] = index * zSpacing + zSpacing + smoothScroll * speed;
@@ -377,8 +377,9 @@ const galleryHeight = Math.max(22000, frameCount * 460);
 
     const animateFrames = () => {
       if (isGalleryVisible) {
-        smoothScroll += (targetScroll - smoothScroll) * 0.08;
-        if (Math.abs(targetScroll - smoothScroll) < 0.08) {
+        const smoothing = window.innerWidth < 768 ? 0.035 : 0.08;
+        smoothScroll += (targetScroll - smoothScroll) * smoothing;
+        if (Math.abs(targetScroll - smoothScroll) < 0.05) {
           smoothScroll = targetScroll;
         }
         updateFrames();
