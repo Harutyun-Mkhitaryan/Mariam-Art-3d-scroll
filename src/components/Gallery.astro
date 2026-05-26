@@ -1,0 +1,335 @@
+---
+// src/components/Gallery.astro
+import { Image } from 'astro:assets';
+import { artworks } from '../data/gallery';
+
+const frameCount = artworks.length + 2;
+const galleryHeight = Math.max(6200, frameCount * 760);
+---
+
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Armenian:wght@500;600&display=swap" rel="stylesheet">
+
+<section
+  id="gallery-section"
+  class="gallery-shell antialiased-text"
+  style={`--gallery-height: ${galleryHeight}px`}
+>
+  <div class="gallery-viewport">
+    <div class="gallery-space">
+      <article class="gallery-frame">
+        <div class="gallery-title-frame">
+          <span class="font-armenian">Ցուցահանդես</span>
+          <h2>Mariam's Digital Art</h2>
+          <div></div>
+        </div>
+      </article>
+
+      {artworks.map((art, index) => {
+        const isReverse = index % 2 !== 0;
+
+        return (
+          <article class="gallery-frame">
+            <div class={`art-frame ${isReverse ? 'is-reverse' : ''}`}>
+              <figure class="art-media">
+                <Image
+                  src={art.image}
+                  alt={art.title}
+                  width={900}
+                  class="art-image"
+                  loading={index < 2 ? 'eager' : 'lazy'}
+                />
+              </figure>
+
+              <div class="art-copy">
+                <span>{art.tag}</span>
+                <h3 class="font-armenian">{art.title}</h3>
+                <p class="font-armenian">{art.desc}</p>
+              </div>
+            </div>
+          </article>
+        );
+      })}
+
+      <article class="gallery-frame">
+        <div class="gallery-footer-frame">
+          Mkhitaryan Harutyun Production · 2026
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<style>
+  .gallery-shell {
+    --index: calc(1vw + 1vh);
+    position: relative;
+    min-height: calc(var(--gallery-height) + 100vh);
+    background:
+      radial-gradient(circle at 20% 12%, rgba(176, 144, 109, 0.12), transparent 28rem),
+      linear-gradient(180deg, #1c1714 0%, #0a0908 42%, #050505 100%);
+    color: #e8e3d9;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 1s ease;
+  }
+
+  .gallery-shell.is-visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .gallery-viewport {
+    position: fixed;
+    inset: 0;
+    perspective: 1500px;
+    overflow: hidden;
+  }
+
+  .gallery-space {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+  }
+
+  .gallery-frame {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(1.25rem, 4vw, 4rem);
+    transform-style: preserve-3d;
+    transition: transform 0.75s cubic-bezier(0.075, 0.5, 0, 1), opacity 0.75s ease;
+    will-change: transform, opacity;
+  }
+
+  .gallery-title-frame {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    user-select: none;
+  }
+
+  .gallery-title-frame span {
+    margin-bottom: 1rem;
+    color: #a38a6b;
+    font-size: clamp(0.75rem, 1.1vw, 1rem);
+    font-weight: 600;
+    letter-spacing: 0.2em;
+  }
+
+  .gallery-title-frame h2 {
+    color: #d9cebf;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: clamp(2.75rem, 8vw, 7rem);
+    font-weight: 400;
+    line-height: 0.95;
+  }
+
+  .gallery-title-frame div {
+    width: 3rem;
+    height: 1px;
+    margin-top: 1.75rem;
+    background: rgba(163, 138, 107, 0.4);
+  }
+
+  .art-frame {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(18rem, 0.8fr);
+    align-items: center;
+    gap: clamp(2rem, 6vw, 6rem);
+    width: min(86vw, 72rem);
+  }
+
+  .art-frame.is-reverse {
+    grid-template-columns: minmax(18rem, 0.8fr) minmax(0, 1.05fr);
+  }
+
+  .art-frame.is-reverse .art-media {
+    order: 2;
+  }
+
+  .art-frame.is-reverse .art-copy {
+    order: 1;
+    text-align: right;
+  }
+
+  .art-media {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: min(70vh, 42rem);
+    margin: 0;
+    overflow: hidden;
+    border: 1px solid rgba(176, 144, 109, 0.22);
+    border-radius: 0.75rem;
+    background: rgba(12, 10, 9, 0.68);
+    box-shadow: 0 2.5rem 5rem rgba(0, 0, 0, 0.56);
+  }
+
+  .art-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .art-copy {
+    max-width: 30rem;
+  }
+
+  .art-copy span {
+    display: block;
+    color: #a38a6b;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  .art-copy h3 {
+    margin-top: 0.75rem;
+    color: #e3d8c8;
+    font-size: clamp(1.7rem, 3vw, 3.25rem);
+    font-style: normal;
+    font-weight: 600;
+    line-height: 1.22;
+  }
+
+  .art-copy p {
+    margin-top: 1.1rem;
+    color: #c4b7a6;
+    font-size: clamp(0.98rem, 1.3vw, 1.15rem);
+    font-style: normal;
+    font-weight: 500;
+    line-height: 1.8;
+  }
+
+  .gallery-footer-frame {
+    color: #b0906d;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: clamp(0.72rem, 1vw, 1rem);
+    letter-spacing: 0.28em;
+    text-align: center;
+    text-transform: uppercase;
+    user-select: none;
+  }
+
+  .font-armenian {
+    font-family: 'Noto Serif Armenian', serif;
+  }
+
+  .antialiased-text {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  :global(body) {
+    scrollbar-width: none;
+  }
+
+  :global(body::-webkit-scrollbar) {
+    display: none;
+  }
+
+  @media (max-width: 767px) {
+    .gallery-shell {
+      min-height: calc(var(--gallery-height) * 0.78 + 100vh);
+    }
+
+    .gallery-frame {
+      padding: 1rem;
+    }
+
+    .art-frame,
+    .art-frame.is-reverse {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 1.25rem;
+      width: min(88vw, 28rem);
+    }
+
+    .art-frame.is-reverse .art-media,
+    .art-frame.is-reverse .art-copy {
+      order: initial;
+      text-align: left;
+    }
+
+    .art-media {
+      height: min(52vh, 27rem);
+      border-radius: 0.6rem;
+    }
+
+    .art-copy {
+      max-width: none;
+    }
+
+    .art-copy h3 {
+      font-size: clamp(1.35rem, 7vw, 2rem);
+    }
+
+    .art-copy p {
+      font-size: 0.92rem;
+      line-height: 1.65;
+    }
+
+    .gallery-footer-frame {
+      max-width: 88vw;
+      line-height: 1.8;
+    }
+  }
+</style>
+
+<script>
+  const section = document.getElementById('gallery-section');
+  const frames = Array.from(document.getElementsByClassName('gallery-frame'));
+
+  if (section && frames.length) {
+    const zSpacing = -1350;
+    const zVals = new Array(frames.length).fill(0);
+
+    const setSectionHeight = () => {
+      const isMobile = window.matchMedia('(max-width: 767px)').matches;
+      const base = frames.length * (isMobile ? 560 : 760);
+      section.style.setProperty('--gallery-height', `${Math.max(isMobile ? 5200 : 6200, base)}px`);
+    };
+
+    const updateFrames = () => {
+      const sectionTop = section.offsetTop;
+      const scrollTop = Math.max(0, window.scrollY - sectionTop);
+      const speed = window.innerWidth < 768 ? 4.5 : 5.2;
+
+      frames.forEach((frame, index) => {
+        zVals[index] = index * zSpacing + zSpacing + scrollTop * speed;
+
+        const transform = `translateZ(${zVals[index]}px)`;
+        const frontFade = Math.min(1, Math.max(0, (180 - zVals[index]) / 260));
+        const backFade = Math.min(1, Math.max(0, (zVals[index] - zSpacing * 1.35) / 420));
+        const opacity = frontFade * backFade;
+        frame.setAttribute('style', `transform: ${transform}; opacity: ${opacity}`);
+      });
+    };
+
+    const revealGallery = () => {
+      section.classList.add('is-visible');
+      setSectionHeight();
+      updateFrames();
+    };
+
+    window.addEventListener('scroll', updateFrames, { passive: true });
+    window.addEventListener('resize', () => {
+      setSectionHeight();
+      updateFrames();
+    });
+
+    updateFrames();
+
+    if (document.documentElement.classList.contains('intro-active')) {
+      window.addEventListener('intro:done', revealGallery, { once: true });
+    } else {
+      revealGallery();
+    }
+  }
+</script>
