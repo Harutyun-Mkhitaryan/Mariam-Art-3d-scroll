@@ -3,8 +3,9 @@
 import { Image } from 'astro:assets';
 import { artworks } from '../data/gallery';
 
-const frameCount = artworks.length + 2;
-const galleryHeight = Math.max(6200, frameCount * 760);
+const spacerFramesPerArtwork = 2;
+const frameCount = artworks.length * (spacerFramesPerArtwork + 1) + 2;
+const galleryHeight = Math.max(22000, frameCount * 460);
 ---
 
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Armenian:wght@500;600&display=swap" rel="stylesheet">
@@ -28,25 +29,29 @@ const galleryHeight = Math.max(6200, frameCount * 760);
         const isReverse = index % 2 !== 0;
 
         return (
-          <article class="gallery-frame">
-            <div class={`art-frame ${isReverse ? 'is-reverse' : ''}`}>
-              <figure class="art-media">
-                <Image
-                  src={art.image}
-                  alt={art.title}
-                  width={900}
-                  class="art-image"
-                  loading={index < 2 ? 'eager' : 'lazy'}
-                />
-              </figure>
+          <>
+            <article class="gallery-frame">
+              <div class={`art-frame ${isReverse ? 'is-reverse' : ''}`}>
+                <figure class="art-media">
+                  <Image
+                    src={art.image}
+                    alt={art.title}
+                    width={900}
+                    class="art-image"
+                    loading={index < 2 ? 'eager' : 'lazy'}
+                  />
+                </figure>
 
-              <div class="art-copy">
-                <span>{art.tag}</span>
-                <h3 class="font-armenian">{art.title}</h3>
-                <p class="font-armenian">{art.desc}</p>
+                <div class="art-copy">
+                  <span>{art.tag}</span>
+                  <h3 class="font-armenian">{art.title}</h3>
+                  <p class="font-armenian">{art.desc}</p>
+                </div>
               </div>
-            </div>
-          </article>
+            </article>
+            <article class="gallery-frame gallery-frame_spacer" aria-hidden="true"></article>
+            <article class="gallery-frame gallery-frame_spacer" aria-hidden="true"></article>
+          </>
         );
       })}
 
@@ -100,7 +105,7 @@ const galleryHeight = Math.max(6200, frameCount * 760);
     justify-content: center;
     padding: clamp(1.25rem, 4vw, 4rem);
     transform-style: preserve-3d;
-    transition: transform 0.75s cubic-bezier(0.075, 0.5, 0, 1), opacity 0.75s ease;
+    transition: opacity 0.55s ease;
     will-change: transform, opacity;
   }
 
@@ -287,49 +292,78 @@ const galleryHeight = Math.max(6200, frameCount * 760);
   const frames = Array.from(document.getElementsByClassName('gallery-frame'));
 
   if (section && frames.length) {
-    const zSpacing = -1350;
+    const zSpacing = -1200;
     const zVals = new Array(frames.length).fill(0);
+    let targetScroll = 0;
+    let smoothScroll = 0;
+    let isGalleryVisible = false;
+    let rafId = 0;
 
     const setSectionHeight = () => {
       const isMobile = window.matchMedia('(max-width: 767px)').matches;
-      const base = frames.length * (isMobile ? 560 : 760);
-      section.style.setProperty('--gallery-height', `${Math.max(isMobile ? 5200 : 6200, base)}px`);
+      const base = frames.length * (isMobile ? 360 : 460);
+      section.style.setProperty('--gallery-height', `${Math.max(isMobile ? 17000 : 22000, base)}px`);
     };
 
     const updateFrames = () => {
-      const sectionTop = section.offsetTop;
-      const scrollTop = Math.max(0, window.scrollY - sectionTop);
-      const speed = window.innerWidth < 768 ? 4.5 : 5.2;
+      const speed = window.innerWidth < 768 ? 2.9 : 2.6;
 
       frames.forEach((frame, index) => {
-        zVals[index] = index * zSpacing + zSpacing + scrollTop * speed;
+        zVals[index] = index * zSpacing + zSpacing + smoothScroll * speed;
 
         const transform = `translateZ(${zVals[index]}px)`;
-        const frontFade = Math.min(1, Math.max(0, (180 - zVals[index]) / 260));
-        const backFade = Math.min(1, Math.max(0, (zVals[index] - zSpacing * 1.35) / 420));
+        const frontFade = Math.min(1, Math.max(0, (360 - zVals[index]) / 520));
+        const backFade = Math.min(1, Math.max(0, (zVals[index] - zSpacing * 1.55) / 640));
         const opacity = frontFade * backFade;
         frame.setAttribute('style', `transform: ${transform}; opacity: ${opacity}`);
       });
     };
 
+    const syncTargetScroll = () => {
+      targetScroll = Math.max(0, window.scrollY - section.offsetTop);
+    };
+
+    const animateFrames = () => {
+      if (isGalleryVisible) {
+        smoothScroll += (targetScroll - smoothScroll) * 0.08;
+        if (Math.abs(targetScroll - smoothScroll) < 0.08) {
+          smoothScroll = targetScroll;
+        }
+        updateFrames();
+      }
+
+      rafId = window.requestAnimationFrame(animateFrames);
+    };
+
     const revealGallery = () => {
       section.classList.add('is-visible');
+      isGalleryVisible = true;
       setSectionHeight();
+      syncTargetScroll();
+      smoothScroll = targetScroll;
       updateFrames();
     };
 
-    window.addEventListener('scroll', updateFrames, { passive: true });
+    window.addEventListener('scroll', syncTargetScroll, { passive: true });
     window.addEventListener('resize', () => {
       setSectionHeight();
+      syncTargetScroll();
       updateFrames();
     });
 
+    setSectionHeight();
+    syncTargetScroll();
     updateFrames();
+    rafId = window.requestAnimationFrame(animateFrames);
 
     if (document.documentElement.classList.contains('intro-active')) {
       window.addEventListener('intro:done', revealGallery, { once: true });
     } else {
       revealGallery();
     }
+
+    window.addEventListener('beforeunload', () => {
+      window.cancelAnimationFrame(rafId);
+    });
   }
 </script>
