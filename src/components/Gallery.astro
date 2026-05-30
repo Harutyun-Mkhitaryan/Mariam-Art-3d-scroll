@@ -254,6 +254,10 @@ const galleryHeight = Math.max(22000, frameCount * 460);
       min-height: calc(var(--gallery-height) + 100vh);
     }
 
+    .gallery-viewport {
+      perspective: 1850px;
+    }
+
     .gallery-frame {
       align-items: center;
       padding: 1rem 0.9rem;
@@ -353,19 +357,24 @@ const galleryHeight = Math.max(22000, frameCount * 460);
 
     const setSectionHeight = () => {
       const isMobile = window.matchMedia('(max-width: 767px)').matches;
-      const base = frames.length * (isMobile ? 640 : 460);
-      section.style.setProperty('--gallery-height', `${Math.max(isMobile ? 30000 : 22000, base)}px`);
+      const base = frames.length * (isMobile ? 720 : 460);
+      section.style.setProperty('--gallery-height', `${Math.max(isMobile ? 36000 : 22000, base)}px`);
     };
 
     const updateFrames = () => {
-      const speed = window.innerWidth < 768 ? 2.05 : 2.6;
+      const isMobile = window.innerWidth < 768;
+      const speed = isMobile ? 1.55 : 2.6;
+      const fadeInStart = isMobile ? zSpacing * 1.95 : zSpacing * 1.55;
+      const fadeInLength = isMobile ? 1180 : 640;
+      const fadeOutStart = isMobile ? 620 : 360;
+      const fadeOutLength = isMobile ? 980 : 520;
 
       frames.forEach((frame, index) => {
         zVals[index] = index * zSpacing + zSpacing + smoothScroll * speed;
 
         const transform = `translateZ(${zVals[index]}px)`;
-        const frontFade = Math.min(1, Math.max(0, (360 - zVals[index]) / 520));
-        const backFade = Math.min(1, Math.max(0, (zVals[index] - zSpacing * 1.55) / 640));
+        const frontFade = Math.min(1, Math.max(0, (fadeOutStart - zVals[index]) / fadeOutLength));
+        const backFade = Math.min(1, Math.max(0, (zVals[index] - fadeInStart) / fadeInLength));
         const opacity = frontFade * backFade;
         frame.setAttribute('style', `transform: ${transform}; opacity: ${opacity}`);
       });
@@ -377,8 +386,13 @@ const galleryHeight = Math.max(22000, frameCount * 460);
 
     const animateFrames = () => {
       if (isGalleryVisible) {
-        const smoothing = window.innerWidth < 768 ? 0.035 : 0.08;
-        smoothScroll += (targetScroll - smoothScroll) * smoothing;
+        const isMobile = window.innerWidth < 768;
+        const smoothing = isMobile ? 0.055 : 0.08;
+        const maxStep = isMobile ? 42 : 110;
+        const diff = targetScroll - smoothScroll;
+        const easedStep = diff * smoothing;
+        const clampedStep = Math.max(-maxStep, Math.min(maxStep, easedStep));
+        smoothScroll += clampedStep;
         if (Math.abs(targetScroll - smoothScroll) < 0.05) {
           smoothScroll = targetScroll;
         }
